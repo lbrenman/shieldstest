@@ -1,0 +1,40 @@
+{
+	"name": "shieldstest",
+	"description": "API Builder service to add API transaction shields to an API Service in Central",
+	"main": "app.js",
+	"version": "0.0.2",
+	"license": "",
+	"keywords": [
+		"api-builder",
+		"micro-service",
+		"middleware",
+		"orm",
+		"service"
+	],
+	"engines": {
+		"node": ">=12.15"
+	},
+	"repository": {},
+	"private": true,
+	"dependencies": {
+		"@axway/api-builder-plugin-fn-base64": "^4.0.0",
+		"@axway/api-builder-plugin-fn-javascript": "^2.0.0",
+		"@axway/api-builder-plugin-fn-json": "^4.0.0",
+		"@axway/api-builder-plugin-fn-mustache": "^1.0.1",
+		"@axway/api-builder-plugin-fn-restclient": "^2.0.0",
+		"@axway/api-builder-plugin-fn-swagger": "^2.0.0",
+		"@axway/api-builder-runtime": "^4.33.0",
+		"axios": "^0.21.1",
+		"qs": "^6.10.1",
+		"short-number": "^1.0.7"
+	},
+	"devDependencies": {
+		"@axway/api-builder-admin": "^1.21.0",
+		"chai": "^4.1.2",
+		"mocha": "^6.1.4"
+	},
+	"scripts": {
+		"start": "node .",
+		"test": "mocha --colors ./test --recursive -R spec"
+	}
+}
