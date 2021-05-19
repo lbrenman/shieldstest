@@ -10,6 +10,8 @@ This API Builder project exposes two API's:
 * /api/intwebhook - triggered by Amplify Central Integration Webhook for when a **new** API Service is discovered by a discovery agent. This webhook adds three shields to the description. Each shield points to the metrics webhook
 * /api/metrics - called by the shields to retrieve total number of api calls, error rate and average response time
 
+If you want to try this out without buidling the API Builder project, you can pull a docker image from [**Dockerhub**](https://hub.docker.com/r/lbrenman/shieldstest).
+
 This project uses 3 external node modules as follows:
 
 * For HTTP API Calls to Central:
