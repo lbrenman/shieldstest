@@ -1,4 +1,4 @@
-![](https://img.shields.io/github/downloads/lbrenman/shieldstest/total)
+![](https://img.shields.io/github/downloads/lbrenman/shieldstest/total?logo=github)
 
 # Amplify Central API Service Shields.io Metrics Service
 
