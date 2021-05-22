@@ -1,3 +1,5 @@
+![](https://img.shields.io/github/downloads/lbrenman/shieldstest/total?logo=github)
+
 # Amplify Central API Service Shields.io Metrics Service
 
 TL;DR - Use Axway's [**API Builder**](https://docs.axway.com/bundle/API_Builder_4x_allOS_en/page/api_builder.html) to add shields to your [**Amplify Central**](https://docs.axway.com/bundle/axway-open-docs/page/docs/central/index.html) API Service Description as follows:
