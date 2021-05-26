@@ -6,7 +6,7 @@ TL;DR - Use Axway's [**API Builder**](https://docs.axway.com/bundle/API_Builder_
 
 ![](https://i.imgur.com/vdZew0J.png)
 
-> Note that this works for *newly* discovered API's and not for existing APIs that have been discovered.
+Refer to this [blog post](https://gist.github.com/lbrenman/37eec4598cfc6b5ee780b2d09ffc79a6) for more details.
 
 This API Builder project exposes two API's:
 * /api/intwebhook - triggered by Amplify Central Integration Webhook for when a **new** API Service is discovered by a discovery agent. This webhook adds three shields to the description. Each shield points to the metrics webhook
