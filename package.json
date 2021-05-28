@@ -2,7 +2,7 @@
 	"name": "shieldstest",
 	"description": "API Builder service to add API transaction shields to an API Service in Central",
 	"main": "app.js",
-	"version": "0.0.2",
+	"version": "0.0.4",
 	"license": "",
 	"keywords": [
 		"api-builder",

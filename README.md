@@ -11,6 +11,7 @@ Refer to this [blog post](https://gist.github.com/lbrenman/37eec4598cfc6b5ee780b
 This API Builder project exposes two API's:
 * /api/intwebhook - triggered by Amplify Central Integration Webhook for when a **new** API Service is discovered by a discovery agent. This webhook adds three shields to the description. Each shield points to the metrics webhook
 * /api/metrics - called by the shields to retrieve total number of api calls, error rate and average response time
+* /api/envmetrics - called by the shields to retrieve api calls and average response time per environment
 
 > Note that if you have previously discovered API Services, you can manually add the shields URLs to your API Service description using the [Axway CLI](https://docs.axway.com/bundle/Axway_CLI_allOS_en/page/axway_cli.html) or Axway Central API's.
 
@@ -32,6 +33,93 @@ Set the following environment variable to run the API Builder project:
 * **AC_SA_CLIENTSECRET** - Amplify Central Service Account Client Secret for Central API calls
 * **AC_BASEURL** - Amplify Central Base URL (e.g. https://apicentral.axway.com)
 * **APIB_HOST** - host address of API Builder (e.g. 75dd...b22e1f2fa08d9cb6084a9.cloudapp-enterprise.appcelerator.com)
+
+## API Calls
+
+### Total Number of API Calls for an API:
+
+  ```
+  curl --location -g --request GET '{{apib_baseaddress}}/api/metrics?eid=8a2e862d779860e20177a6888d450233&pid=remoteApiId_o18il3ymuh&metrictype=totalnumcalls'
+  ```
+
+  Response:
+
+  ```
+  {
+      "schemaVersion": 1,
+      "label": "Total # Calls",
+      "message": "185",
+      "color": "green"
+  }
+  ```
+
+### Average Response Time for an API:
+
+  ```
+  curl --location --request GET '{{apib_baseaddress}}/api/metrics?eid=8a2e862d779860e20177a6888d450233&pid=remoteApiId_o18il3ymuh&metrictype=avgresptime'
+  ```
+
+  Response:
+
+  ```
+  {
+    "schemaVersion": 1,
+    "label": "Avg Resp Time",
+    "message": "10.8ms",
+    "color": "blue"
+  }
+  ```
+
+### Error Rate for an API:
+
+  ```
+  curl --location --request GET '{{apib_baseaddress}}/api/metrics?eid=8a2e862d779860e20177a6888d450233&pid=remoteApiId_o18il3ymuh&metrictype=errorrate'
+  ```
+
+  Response:
+
+  ```
+  {
+    "schemaVersion": 1,
+    "label": "Err Rate",
+    "message": "50.8%",
+    "color": "red"
+  }
+  ```
+
+### API Calls for an Environment:
+
+  ```
+  curl --location --request GET '{{apib_baseaddress}}/api/envmetrics?eid=8a2e862d779860e20177a6888d450233&metrictype=envcallmetrics'
+  ```
+
+  Response:
+
+  ```
+  {
+    "schemaVersion": 1,
+    "label": "API Calls",
+    "message": "Success: 119, Client Errors: 100, Server Errors: 0",
+    "color": "red"
+  }
+  ```
+
+### API Average Response Time for an Environment:
+
+  ```
+  curl --location --request GET '{{apib_baseaddress}}/api/envmetrics?eid=8a2e862d779860e20177a6888d450233&metrictype=envavgresptime'
+  ```
+
+  Response:
+
+  ```
+  {
+    "schemaVersion": 1,
+    "label": "Avg Resp Time",
+    "message": "16.2ms",
+    "color": "blue"
+  }
+  ```
 
 ## Docker Build Command
 

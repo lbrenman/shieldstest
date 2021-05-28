@@ -13,20 +13,16 @@ function sendResponse(statusCode, response, req, resp, next) {
 	next();
 }
 
-function errorRate(options, req, resp, next) {
-	console.log('errorRate() called');
-
-	let totalNumAPICalls = 0;
-	let numFailedCalls = 0;
+function envCallMetrics(options, req, resp, next) {
+	console.log('envCallMetrics() called');
 
 	lib.init(options.clientId, options.clientSecret, options.apiCentralBaseURL, function(e) {
 		if(e.success) {
-			lib.numAPICallsPerStatus(req.params.pid, req.params.eid, function(transactionSearchResult) {
+			lib.envNumAPICallsPerStatus(req.params.eid, function(transactionSearchResult) {
 				if(transactionSearchResult.success) {
 
 					console.log(transactionSearchResult.data)
 
-					let errorRate = "0";
 					let failures = 0;
 					let successes = 0;
 					let exceptions = 0;
@@ -43,62 +39,19 @@ function errorRate(options, req, resp, next) {
 						exceptions = transactionSearchResult.data.Exception;
 					}
 
-					totalNumAPICalls = failures + successes + exceptions;
-
-					if(totalNumAPICalls > 0) {
-						errorRate = 100*((failures+exceptions)/totalNumAPICalls);
-						errorRate = Number.parseFloat(errorRate).toFixed(1).toString()
-					}
-
 					var response = {
 						"schemaVersion": 1,
-						"label": "Err Rate",
-						"message": errorRate.toString()+'%',
+						"label": "API Calls",
+						"message": "Success: "+successes+", Client Errors: "+failures+", Server Errors: "+exceptions,
 						"color": "red"
 					}
 
 					sendResponse(200, response, req, resp, next)
 
 				} else {
-					console.log('Error with Transaction Search - num API calls by status!')
+					console.log('Error with Transaction Search - num Env API calls by status!')
 
-					sendResponse(400, 'Error with Transaction Search - num API calls by status!', req, resp, next)
-
-				}
-			})
-		} else {
-			console.log(tokenErrorMsg)
-
-			sendResponse(400, tokenErrorMsg, req, resp, next)
-		}
-	});
-
-}
-
-function totalNumAPICalls(options, req, resp, next) {
-	console.log('totalNumAPICalls() called');
-
-	let totalNumAPICalls = 0;
-
-	lib.init(options.clientId, options.clientSecret, options.apiCentralBaseURL, function(e) {
-		if(e.success) {
-			lib.totalNumAPICalls(req.params.pid, req.params.eid, function(transactionSearchResult) {
-				if(transactionSearchResult.success) {
-					totalNumAPICalls = transactionSearchResult.data
-
-					var response = {
-						"schemaVersion": 1,
-						"label": "Total # Calls",
-						"message": shortNumber(totalNumAPICalls).toString(),
-						"color": "green"
-					}
-
-					sendResponse(200, response, req, resp, next)
-
-				} else {
-					console.log('Error with Transaction Search!')
-
-					sendResponse(400, 'Error with Transaction Search!', req, resp, next)
+					sendResponse(400, 'Error with Transaction Search - num Env API calls by status!', req, resp, next)
 
 				}
 			})
@@ -111,12 +64,12 @@ function totalNumAPICalls(options, req, resp, next) {
 
 }
 
-function avgResponseTime(options, req, resp, next) {
-	console.log('avgResponseTime() called');
+function envAvgResponseTime(options, req, resp, next) {
+	console.log('envAvgResponseTime() called');
 
 	lib.init(options.clientId, options.clientSecret, options.apiCentralBaseURL, function(e) {
 		if(e.success) {
-			lib.avgAPIResponseTime(req.params.pid, req.params.eid, function(transactionSearchResult) {
+			lib.envAvgAPIResponseTime(req.params.eid, function(transactionSearchResult) {
 				if(transactionSearchResult.success) {
 
 					let avgAPIResponseTime = 0;
@@ -150,30 +103,25 @@ function avgResponseTime(options, req, resp, next) {
 
 }
 
-var metrics = APIBuilder.API.extend({
+var envmetrics = APIBuilder.API.extend({
 	group: 'webhook',
-	path: '/api/metrics',
+	path: '/api/envmetrics',
 	method: 'GET',
-	description: 'API to retrieve API metrics for a shields.io badge',
+	description: 'API to retrieve Environment API metrics for a shields.io badge',
 	parameters: {
 		metrictype: {
 			type: 'query',
-			description: 'Type of metric (totalnumcalls, avgresptime, errorrate)',
+			description: 'Type of metric (envcallmetrics, envavgresptime)',
 			optional: false
 		},eid: {
 			type: 'query',
-			description: 'Environment ID of the API',
-			optional: false
-		},
-		pid: {
-			type: 'query',
-			description: 'Proxy ID of the API',
+			description: 'Environment ID',
 			optional: false
 		}
 	},
 	action: function (req, resp, next) {
 
-		console.log('metrics API called')
+		console.log('envmetrics API called')
 
 		let options = {
 		  clientId: config.clientId,
@@ -182,14 +130,11 @@ var metrics = APIBuilder.API.extend({
 		}
 
 		switch(req.params.metrictype) {
-			case 'totalnumcalls':
-				totalNumAPICalls(options, req, resp, next);
+			case 'envcallmetrics':
+				envCallMetrics(options, req, resp, next);
 				break;
-			case 'avgresptime':
-				avgResponseTime(options, req, resp, next);
-				break;
-			case 'errorrate':
-				errorRate(options, req, resp, next);
+			case 'envavgresptime':
+				envAvgResponseTime(options, req, resp, next);
 				break;
 			default:
 				{
@@ -203,4 +148,4 @@ var metrics = APIBuilder.API.extend({
 	}
 });
 
-module.exports = metrics;
+module.exports = envmetrics;

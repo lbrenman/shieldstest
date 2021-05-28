@@ -21,7 +21,10 @@ module.exports = {
   updateAPIService: updateAPIService,
   totalNumAPICalls: totalNumAPICalls,
   avgAPIResponseTime: avgAPIResponseTime,
-  numFailedAPICalls: numFailedAPICalls
+  envAvgAPIResponseTime: envAvgAPIResponseTime,
+  numFailedAPICalls: numFailedAPICalls,
+  numAPICallsPerStatus: numAPICallsPerStatus,
+  envNumAPICallsPerStatus: envNumAPICallsPerStatus
 }
 
 function consoleLog(str) {
@@ -238,6 +241,45 @@ function avgAPIResponseTime(proxyId, environmentId, callback) {
   traceabilitySearch(data, callback)
 }
 
+function envAvgAPIResponseTime(environmentId, callback) {
+
+  let now = new Date();
+
+  let data = {
+    "filters": {
+      "$and": [
+        {
+          "$match": {
+            "type": [
+              "transactionSummary"
+            ]
+          }
+        },
+        {
+          "$match": {
+            "environmentId": [
+              environmentId
+            ]
+          }
+        }
+      ],
+      "$range": {
+        "@event_time": {
+          "gt": 0,
+          "lt": now.getTime()
+        }
+      }
+    },
+    "invoke": {
+      "field": "transactionSummary.duration",
+      "method": "avg"
+    },
+    "version": "0.2"
+  }
+
+  traceabilitySearch(data, callback)
+}
+
 function totalNumAPICalls(proxyId, environmentId, callback) {
 
   let now = new Date();
@@ -331,6 +373,103 @@ function numFailedAPICalls(proxyId, environmentId, callback) {
       "field": "@event_time",
       "method": "count"
     },
+    "version": "0.2"
+  }
+
+  traceabilitySearch(data, callback)
+}
+
+function numAPICallsPerStatus(proxyId, environmentId, callback) {
+
+  let now = new Date();
+
+  let data = {
+    "filters": {
+      "$and": [
+        {
+          "$match": {
+            "type": [
+              "transactionSummary"
+            ]
+          }
+        },
+        {
+          "$match": {
+            "transactionSummary.proxy.id": [
+              proxyId
+            ]
+          }
+        },
+        {
+          "$match": {
+            "environmentId": [
+              environmentId
+            ]
+          }
+        }
+      ],
+      "$range": {
+        "@event_time": {
+          "gt": 0,
+          "lt": now.getTime()
+        }
+      }
+    },
+    "invoke": {
+      "field": "@event_time",
+      "method": "count"
+    },
+    "group_by": [
+      {
+        "field": "transactionSummary.status",
+        "type": "string"
+      }
+    ],
+    "version": "0.2"
+  }
+
+  traceabilitySearch(data, callback)
+}
+
+function envNumAPICallsPerStatus(environmentId, callback) {
+
+  let now = new Date();
+
+  let data = {
+    "filters": {
+      "$and": [
+        {
+          "$match": {
+            "type": [
+              "transactionSummary"
+            ]
+          }
+        },
+        {
+          "$match": {
+            "environmentId": [
+              environmentId
+            ]
+          }
+        }
+      ],
+      "$range": {
+        "@event_time": {
+          "gt": 0,
+          "lt": now.getTime()
+        }
+      }
+    },
+    "invoke": {
+      "field": "@event_time",
+      "method": "count"
+    },
+    "group_by": [
+      {
+        "field": "transactionSummary.status",
+        "type": "string"
+      }
+    ],
     "version": "0.2"
   }
 
