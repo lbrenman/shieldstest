@@ -2,20 +2,25 @@
 
 # Amplify Central API Service Shields.io Metrics Service
 
-TL;DR - Use Axway's [**API Builder**](https://docs.axway.com/bundle/API_Builder_4x_allOS_en/page/api_builder.html) to add shields to your [**Amplify Central**](https://docs.axway.com/bundle/axway-open-docs/page/docs/central/index.html) API Service Description as follows:
+TL;DR - Use Axway's [**API Builder**](https://docs.axway.com/bundle/API_Builder_4x_allOS_en/page/api_builder.html) to add shields to your [**Amplify Central**](https://docs.axway.com/bundle/axway-open-docs/page/docs/central/index.html) API Service Description and Environment as follows:
 
 ![](https://i.imgur.com/vdZew0J.png)
 
-Refer to this [blog post](https://gist.github.com/lbrenman/37eec4598cfc6b5ee780b2d09ffc79a6) for more details.
+![](https://i.imgur.com/wFse5OI.png)
 
-This API Builder project exposes two API's:
-* /api/intwebhook - triggered by Amplify Central Integration Webhook for when a **new** API Service is discovered by a discovery agent. This webhook adds three shields to the description. Each shield points to the metrics webhook
-* /api/metrics - called by the shields to retrieve total number of api calls, error rate and average response time
-* /api/envmetrics - called by the shields to retrieve api calls and average response time per environment
+Refer to these blog posts for more details:
+
+* [Amplify Central: Add API Traffic Badges to your API Service Description](https://gist.github.com/lbrenman/37eec4598cfc6b5ee780b2d09ffc79a6)
+* [Amplify Central - Add API Traffic Badges to your Environment Description](https://gist.github.com/lbrenman/a87a4f7465953bb5b3def2397d6c7570)
+
+This API Builder project exposes three API's:
+* */intwebhook* - triggered by Amplify Central Integration Webhook for when a new API Service is discovered by a discovery agent. This webhook automatically adds three shields to the description. Each shield points to the */metrics* webhook below
+* */metrics* - called by the API Service Metrics shields to retrieve total number of api calls, error rate and average response time
+* */envmetrics* - called by the Environment Metrics shields to retrieve api calls and average response time per environment
 
 > Note that if you have previously discovered API Services, you can manually add the shields URLs to your API Service description using the [Axway CLI](https://docs.axway.com/bundle/Axway_CLI_allOS_en/page/axway_cli.html) or Axway Central API's.
 
-If you want to try this out without buidling the API Builder project, you can pull a docker image from [**Dockerhub**](https://hub.docker.com/r/lbrenman/shieldstest).
+If you want to try this out without building the API Builder project, you can pull a docker image from [**Dockerhub**](https://hub.docker.com/r/lbrenman/shieldstest).
 
 This project uses 3 external node modules as follows:
 
@@ -215,135 +220,83 @@ You can deploy this docker container anywhere that you'd like.
   axway acs publish shieldstest --delete_oldest --force --image shieldstest --app_version 0.1
   ```
 
+
+
 ## Setup Amplify Central Integration Webhooks
 
-In order for this app to work, it needs to be triggered by an Amplify Central Integration Webhook when a new API Service is discovered by the Discovery Agent. Here are sample CURL commands for setting up such a webhook:
+In order for this app to work, it needs to be triggered by an Amplify Central Integration Webhook when a new API Service is discovered by the Discovery Agent.
 
-* Get an access token as described [**here**](https://devblog.axway.com/apis/amplify-central-connected-gateway-custom-api-subscription-flow-basics/):
+You can do this using the [**Axway CLI**](https://docs.axway.com/bundle/axway-open-docs/page/docs/central/cli_central/cli_install/index.html#install-axway-cli-and-axway-central-cli) as follows:
 
-  ```
-  curl --location --request POST 'https://login.axway.com/auth/realms/Broker/protocol/openid-connect/token' \
-  --header 'Content-Type: application/x-www-form-urlencoded' \
-  --header 'Authorization: Basic <<<REPLACE WITH YOUR BASE64 ENCODED ID AND SECRET>>>' \
-  --data-urlencode 'grant_type=client_credentials'
-  ```
-
-* Create an Integration:
+1. Create a YAML file, *resources.yaml*, as follows:
 
   ```
-  curl --location --request POST 'https://apicentral.axway.com/apis/management/v1alpha1/integrations' --header 'Content-Type: application/json' --header 'Authorization: Bearer <ACCESS TOKEN>' --data-raw '{
-    "name": "apiscintegration",
-    "title": "API Service Created Integration",
-    "tags": [
-        "cloud"
-    ],
-    "attributes": {},
-    "spec": {
-        "description": "This is an Integration for when an API Service is created."
-    }
-  }'
+  name: apiscintegration
+  kind: Integration
+  apiVersion: v1alpha1
+  title: API Service Created Integration
+  tags:
+  - cloud
+  spec:
+      description: This is an Integration for when an API Service is created.
+  ---
+  name: apiscwebhook
+  kind: Webhook
+  apiVersion: v1alpha1
+  title: API Service Created Webhook to invoke an API Builder API
+  metadata:
+    scope:
+      kind: Integration
+      name: apiscintegration
+  spec:
+      enabled: true
+      url: https://23cfbb7e5354.ngrok.io/api/intwebhook
+  ---
+  group: management
+  apiVersion: v1alpha1
+  kind: ResourceHook
+  name: apisc-hook
+  title: Resource Hook to monitor environment aws and new API Service created
+  metadata:
+    scope:
+      kind: Integration
+      name: apiscintegration
+  spec:
+    triggers:
+      - group: management
+        kind: APIService
+        name: '*'
+        type:
+          - created
+        scope:
+          kind: Environment
+          name: aws
+    webhooks:
+      - apiscwebhook
   ```
 
-  > Note: use access_token from the first API Call
+  > Note that the url above is the URL of the API Builder API so the API Builder project must be deployed/running before setting up the Integration. Replace with the URL of your container.
 
-* Create an Integration Webhook :
+  > Note that the scope for the resource hook is my aws environment. You can replace with your environment name or use an asterisk '*' for all environments
+
+2. Run the following Axway CLI commands to authenticate using your platform credentials and to create the Integration Webhook resources:
 
   ```
-  curl --location --request POST 'https://apicentral.axway.com/apis/management/v1alpha1/integrations/apiscintegration/webhooks' --header 'Content-Type: application/json' --header 'Authorization: Bearer <ACCESS TOKEN>' --data-raw '{
-    "name": "apiscwebhook",
-    "title": "API Service Created Webhook to invoke an API Builder API",
-    "tags": [
-        "prod",
-        "saas",
-        "axway"
-    ],
-    "attributes": {
-        "release": "1.0.0"
-    },
-    "spec": {
-        "enabled": true,
-        "url": "https://23cfbb7e5354.ngrok.io/api/intwebhook"
-    }
-  }'
+  axway auth login
+  axway central create -f resources.yaml
   ```
 
-  > Note that the url above is the URL of the API Builder API so the API Builder project must be deployed/running before setting up the Integration
+  The response will be something like this:
 
-  ## Setup Amplify Central Integration Webhooks
+  ```
+  ⠋ Creating resource(s)(node:96292) ExperimentalWarning: The fs.promises API is experimental
+  ✔ "integration/apiscintegration" has successfully been created.
+  ✔ "webhook/apiscwebhook" has successfully been created.
+  ✔ "resourcehook/apisc-hook" has successfully been created.
+  ```
 
-  In order for this app to work, it needs to be triggered by an Amplify Central Integration Webhook when a new API Service is discovered by the Discovery Agent.
+  If you need to make a change to your YAML file, say to update the URL of the webhook, for example, you can use the following command to update the resources:
 
-  You can do this using the [**Axway CLI**](https://docs.axway.com/bundle/axway-open-docs/page/docs/central/cli_central/cli_install/index.html#install-axway-cli-and-axway-central-cli) as follows:
-
-  1. Create a YAML file, *resources.yaml*, as follows:
-
-    ```
-    name: apiscintegration
-    kind: Integration
-    apiVersion: v1alpha1
-    title: API Service Created Integration
-    tags:
-    - cloud
-    spec:
-        description: This is an Integration for when an API Service is created.
-    ---
-    name: apiscwebhook
-    kind: Webhook
-    apiVersion: v1alpha1
-    title: API Service Created Webhook to invoke an API Builder API
-    metadata:
-      scope:
-        kind: Integration
-        name: apiscintegration
-    spec:
-        enabled: true
-        url: https://23cfbb7e5354.ngrok.io/api/intwebhook
-    ---
-    group: management
-    apiVersion: v1alpha1
-    kind: ResourceHook
-    name: apisc-hook
-    title: Resource Hook to monitor environment aws and new API Service created
-    metadata:
-      scope:
-        kind: Integration
-        name: apiscintegration
-    spec:
-      triggers:
-        - group: management
-          kind: APIService
-          name: '*'
-          type:
-            - created
-          scope:
-            kind: Environment
-            name: aws
-      webhooks:
-        - apiscwebhook
-    ```
-
-    > Note that the url above is the URL of the API Builder API so the API Builder project must be deployed/running before setting up the Integration. Replace with the URL of your container.
-
-    > Note that the scope for the resource hook is my aws environment. You can replace with your environment name or use an asterisk '*' for all environments
-
-  2. Run the following Axway CLI commands to authenticate using your platform credentials and to create the Integration Webhook resources:
-
-    ```
-    axway auth login
-    axway central create -f resources.yaml
-    ```
-
-    The response will be something like this:
-
-    ```
-    ⠋ Creating resource(s)(node:96292) ExperimentalWarning: The fs.promises API is experimental
-    ✔ "integration/apiscintegration" has successfully been created.
-    ✔ "webhook/apiscwebhook" has successfully been created.
-    ✔ "resourcehook/apisc-hook" has successfully been created.
-    ```
-
-    If you need to make a change to your YAML file, say to update the URL of the webhook, for example, you can use the following command to update the resources:
-
-    ```
-    axway central apply -f resources.yaml
-    ```
+  ```
+  axway central apply -f resources.yaml
+  ```
