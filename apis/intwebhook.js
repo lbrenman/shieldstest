@@ -19,6 +19,7 @@ var intwebhook = APIBuilder.API.extend({
 		organization: {description:'organization object'},
 		type: {description:'type'},
 		payload: {description:'payload object'},
+		metadata: {description:'metadata object'}
 	},
 	action: function (req, resp, next) {
 
