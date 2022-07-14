@@ -22,7 +22,7 @@ module.exports = {
 	// default configuration.
 
 	// API key
-	apikey: 'IzS4xh64srW3I7+gDmHmA9vf7tK7FbeH',
+	apikey: process.env.API_KEY,
 
 	// This is the base url the service will be reachable at not including the
 	// port

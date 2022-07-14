@@ -1,4 +1,4 @@
-let debugConsoleLog = false;
+let debugConsoleLog = true;
 
 const qs = require('qs')
 const axios = require('axios');
